@@ -1,0 +1,45 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2012                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+thermoType
+{
+    type            hePsiThermo;
+    mixture         pureMixture;
+    transport       H2Transport;
+    thermo          H2Thermo;
+    equationOfState LeachmanH2Gas;	
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight       2.016;		// Molar mass of hydrogen in g/mol
+    }
+
+    equationOfState
+    {
+        Tc              33.145;		// Critical temperature of hydrogen in K	
+        Vc              0.064483;	// Critical volume of hydrogen in m^3/kmol
+        Pc              1296400.0;	// Critical pressure of hydrogen in Pa
+    }
+	
+}
+
+// ************************************************************************* //

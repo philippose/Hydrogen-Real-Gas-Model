@@ -1,0 +1,3 @@
+psiThermo/psiThermosRealH2.C 
+ 
+LIB = $(FOAM_SITE_LIBBIN)/librealH2ThermophysicalModels

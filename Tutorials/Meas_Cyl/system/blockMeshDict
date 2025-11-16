@@ -1,0 +1,431 @@
+/*--------------------------------*- C++ -*----------------------------------*\ 
+  =========                 | 
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox 
+   \\    /   O peration     | Website:  https://openfoam.org 
+    \\  /    A nd           | Version:  7 
+     \\/     M anipulation  | 
+\*---------------------------------------------------------------------------*/ 
+FoamFile
+{ 
+    version     2.0; 
+    format      ascii; 
+    class       dictionary; 
+    object      blockMeshDict; 
+} 
+
+// * * * * * * * * * * * MESH GENERATION TOOL OF 2D NOZZLE * * * * * * * * * // 
+//									     //
+// * * * * * * * * * * * * * * * INPUT PARAMETERS  * * * * * * * * * * * * * //
+//									     //
+// - - - - - - - - - - - - - - - - - Geometry - - - - - -  - - - - - - - - - //
+//									     //
+sc 0.001; 	// Scaling factor (sc = 0.001 ==> d = 1 mm)	     	     //
+li 0.5; 	// Inlet length					     	     //
+// list of z and y coordinates of nozzle contour  			     //
+#include "Meas_Cyl.out";  						     //
+//									     //
+// - - - - - - - - - - - - - - - - - - Mesh - - - - - - - - - - - - - - - -  //
+//									     //
+cy 90;		// Number of cells in y of nozzle	     	     	     //
+cz 600;		// Number of cells in z of nozzle	     	     	     //
+gy 10;		// Grading in y towards nozzle wall	     	     	     //
+//									     //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// * * * * * * * * * !!! DO NOT CHANGE THE FOLLOWING CODE !!!  * * * * * * * //
+// Calculated parameter list
+#codeStream
+{
+	codeInclude 
+	#{ 	#include "scalarField.H"
+	#};
+	code 
+	#{
+		scalar li = scalar(dict.lookupOrDefault("li",0.0));
+		scalar cz = scalar(dict.lookupOrDefault("cz",0.0));
+    		scalarField BSz = scalarField(dict.lookup("BSz"));
+		scalarField BSy = scalarField(dict.lookup("BSy"));
+		scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+		
+		scalar BSn = BSz.size();	
+		scalar ze = BSz[BSn-1] - BSz[0];
+		scalar zm1 = BSz[1] - BSz[0];
+		scalar zm2 = BSz[ceil(BSd/2) + 1] - BSz[0];
+		scalar zm4 = BSz[ceil((BSd+BSn-1)/2) + 1] - BSz[0];
+		scalar zb2 = BSz[ceil(BSd/2)] - BSz[0];
+		scalar zb3 = BSz[BSd] - BSz[0];
+		scalar zb4 = BSz[ceil((BSd+BSn-1)/2)] - BSz[0];
+
+		scalar ys = BSy[0];
+		scalar ye = BSy[BSn-1];
+		scalar ym1 = BSy[1];
+		scalar ym2 = BSy[ceil(BSd/2) + 1];
+		scalar ym4 = BSy[ceil((BSd+BSn-1)/2) + 1];
+		scalar yb2 = BSy[ceil(BSd/2)];
+		scalar yb3 = BSy[BSd];
+		scalar yb4 = BSy[ceil((BSd+BSn-1)/2)];
+		
+		scalar zh1 = zm1*(ys/(ys-ym1));
+		scalar zh2 = -1.0*yb2*((zm2-zb2)/(ym2-yb2));
+		scalar zh4 = yb4*((zm4-zb4)/(ym4-yb4));
+		scalar z1 = -1.0*(sqrt(ys*ys + zh1*zh1) - zh1); 
+		scalar z2 = zb2 - ((sqrt(yb2*yb2 + zh2*zh2) - zh2));
+		scalar z4 = zb4 + ((sqrt(yb4*yb4 + zh4*zh4) - zh4));
+		scalar y11 = ys + li;
+		scalar z0 = -1.0*(ys + li);
+		scalar cz0 = ceil(cz*((z1 - z0)/(ze - z1)));
+		scalar cz1 = ceil(cz*((z2 - z1)/(ze - z1)));
+		scalar cz2 = ceil(cz*((zb3 - z2)/(ze - z1)));
+		scalar cz3 = ceil(cz*((z4 - zb3)/(ze - z1)));
+		scalar cz4 = ceil(cz*((ze - z4)/(ze - z1)));
+		
+		os << "ze " << ze << ";" << nl ;
+		os << "zb2 " << zb2 << ";" << nl ;
+		os << "zb3 " << zb3 << ";" << nl ;
+		os << "zb4 " << zb4 << ";" << nl ;
+		os << "ys " << ys << ";" << nl ;
+		os << "ye " << ye << ";" << nl ;
+		os << "yb2 " << yb2 << ";" << nl ;
+		os << "yb3 " << yb3 << ";" << nl ;
+		os << "yb4 " << yb4 << ";" << nl ;
+		os << "z1 " << z1 << ";" << nl ;
+		os << "z2 " << z2 << ";" << nl ;
+		os << "z4 " << z4 << ";" << nl ;
+
+		os << "y11 " << y11 << ";" << nl ;
+		os << "z0 " << z0 << ";" << nl ;
+		os << "cz0 " << cz0 << ";" << nl ;
+		os << "cz1 " << cz1 << ";" << nl ;
+		os << "cz2 " << cz2 << ";" << nl ;
+		os << "cz3 " << cz3 << ";" << nl ;
+		os << "cz4 " << cz4 << ";" << nl ;
+	#};
+};
+
+// blockMesh script
+
+scale $sc;
+
+vertices
+(
+ 	(0 	0 	$z0) 	//00
+ 	(0 	0 	$z1)	//01
+	(0 	0 	$z2) 	//02
+	(0 	0 	$zb3) 	//03
+	(0 	0 	$z4) 	//04
+	(0 	0 	$ze) 	//05
+	(0 	$ye 	$ze) 	//06
+	(0 	$yb4 	$zb4) 	//07
+	(0 	$yb3	$zb3) 	//08
+	(0 	$yb2 	$zb2) 	//09	
+	(0 	$ys 	0) 	//10
+	(0 	$y11 	0) 	//11
+
+ 	(1 	0 	$z0) 	//12
+ 	(1 	0 	$z1)	//13
+	(1 	0 	$z2) 	//14
+	(1 	0 	$zb3) 	//15
+	(1 	0 	$z4) 	//16
+	(1 	0 	$ze) 	//17
+	(1 	$ye 	$ze) 	//18
+	(1 	$yb4 	$zb4) 	//19
+	(1 	$yb3 	$zb3) 	//20
+	(1 	$yb2 	$zb2) 	//21	
+	(1 	$ys 	0) 	//22
+	(1 	$y11 	0) 	//23
+);
+
+blocks
+(
+ 	hex (0 12 23 11 1 13 22 10) (1 $cy $cz0) simpleGrading (1 #calc "1.0/$gy" 1)	//(x y z)
+ 	hex (1 13 22 10 2 14 21 9) (1 $cy $cz1) simpleGrading (1 #calc "1.0/$gy" 1)
+ 	hex (2 14 21 9 3 15 20 8) (1 $cy $cz2) simpleGrading (1 #calc "1.0/$gy" 1)
+ 	hex (3 15 20 8 4 16 19 7) (1 $cy $cz3) simpleGrading (1 #calc "1.0/$gy" 1)
+ 	hex (4 16 19 7 5 17 18 6) (1 $cy $cz4) simpleGrading (1 #calc "1.0/$gy" 1)
+);
+
+edges
+(
+	arc 0 11  (0	0			#calc "-1*$z0")
+	arc 12 23 (1	0			#calc "-1*$z0")
+
+	arc 10 1  (0	#calc "-1.0*$ys"	0)
+	arc 22 13 (1	#calc "-1.0*$ys"	0)
+
+	arc 9 2   (0	#calc "-1.0*$yb2"	$zb2)
+	arc 21 14 (1	#calc "-1.0*$yb2"	$zb2)
+
+	arc 7 4   (0	#calc "-1.0*$yb4"	$zb4)
+	arc 19 16 (1	#calc "-1.0*$yb4"	$zb4)
+
+ 	BSpline 10 9 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+     	     for (label i = 1; i < ceil(BSd/2); i++)
+     	     {
+       	      os  << point(0, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+ 	BSpline 22 21 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+     	     for (label i = 1; i < ceil(BSd/2); i++)
+     	     {
+       	      os  << point(1, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+/////////////////////////////////////////////////////////////////////////
+
+ 	BSpline 9 8 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+     	     for (label i = 1 + ceil(BSd/2); i < BSd; i++)
+     	     {
+       	      os  << point(0, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+ 	BSpline 21 20 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+     	     for (label i = 1 + ceil(BSd/2); i < BSd; i++)
+     	     {
+       	      os  << point(1, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+///////////////////////////////////////////////////////////////////////////////
+
+ 	BSpline 8 7 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+	     scalar BSn = BSz.size();
+     	     for (label i = BSd + 1; i < ceil((BSd+BSn-1)/2); i++)
+     	     {
+       	      os  << point(0, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+ 	BSpline 20 19 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+	     scalar BSn = BSz.size();
+     	     for (label i = BSd + 1; i < ceil((BSd+BSn-1)/2); i++)
+     	     {
+       	      os  << point(1, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+////////////////////////////////////////////////////////////////////////////
+
+ 	BSpline 7 6 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+	     scalar BSn = BSz.size();
+     	     for (label i = ceil((BSd+BSn-1)/2) + 1; i < BSn-1; i++)
+     	     {
+       	      os  << point(0, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+ 	BSpline 19 18 
+	( #codeStream
+ 	  {
+   	   codeInclude 
+	   #{ 
+	     #include "pointField.H" 
+	     #include "scalarField.H" 
+	   #};
+   	   code 
+	   #{
+    	     scalarField BSz = scalarField(dict.lookup("BSz"));
+    	     scalarField BSy = scalarField(dict.lookup("BSy"));
+	     scalar BSd = scalar(dict.lookupOrDefault("BSd",0));
+	     scalar BSn = BSz.size();
+     	     for (label i = ceil((BSd+BSn-1)/2) + 1; i < BSn-1; i++)
+     	     {
+       	      os  << point(1, BSy[i], BSz[i]) << nl;
+     	     }
+   	   #};
+  	  }
+   	)
+
+
+);
+
+boundary
+(
+ 	inlet
+ 	{
+ 		type patch;
+ 		faces
+ 		(
+ 			(0 11 23 12)
+ 		);
+ 	}
+	outlet
+ 	{
+ 		type patch;
+ 		faces
+ 		(
+ 			(6 5 17 18)
+ 		);
+ 	}
+ 	axis
+ 	{
+ 		type empty;
+ 		faces
+ 		(
+ 			(0 1 13 12)
+ 			(1 2 14 13)
+ 			(2 3 15 14)
+ 			(3 4 16 15)
+ 			(4 5 17 16)
+ 		);
+ 	}
+ 	top
+ 	{
+ 		type wall;
+ 		faces
+ 		(
+ 			(11 10 22 23)
+ 			(10 9 21 22)
+ 			(9 8 20 21)
+ 			(8 7 19 20)
+ 			(7 6 18 19)
+ 		);
+ 	}
+ 	front
+ 	{
+ 		type patch;
+ 		faces
+ 		(
+ 			(0 1 10 11)
+			(1 2 9 10)
+			(2 3 8 9)
+			(3 4 7 8)
+			(4 5 6 7)
+ 		);
+ 	}
+ 	back
+ 	{
+ 		type patch;
+ 		faces
+ 		(
+ 			(12 13 22 23)
+			(13 14 21 22)
+			(14 15 20 21)
+			(15 16 19 20)
+			(16 17 18 19)
+
+ 		);
+ 	}
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
