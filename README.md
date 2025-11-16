@@ -1,5 +1,17 @@
 # Hydrogen-Real-Gas-Model
 
+NOTE: Cloned from the original Repository in Gitlab - https://gitlab1.ptb.de/methyinfra/hydrogen-real-gas-model
+
+Changes have been made to the "files" and "options" files in the relevant folders to allow compilation of the library in OpenFOAM v2506. As setup currently, a new library "librealH2ThermophysicalModels" will be created in the $FOAM_SITE_LIB location. In Addition, compiling the function object creates a library "libfieldH2FunctionObjects". 
+
+In order to use the real gas model, include follwing line into the **controlDict** file in simulations: 
+
+~~~
+libs( "librealH2ThermophysicalModels.so" );
+~~~
+
+***
+
 In this repository, a new real gas model for hydrogen based on the Reference Fluid Thermodynamic and Transport Properties Database (REFPROP) v10.0 is provided for the use in the simulation software OpenFOAM v2012. The model is valid in a temperature and pressure range of 150-400 K and 0.1-1000 bar, respectively. Usage beyond this range is not recommended as it may lead to unrealistic results.  
 
 Results regarding the new real gas model for hydrogen have been published in the article "Derivation and validation of a reference data-based real gas model for hydrogen" [(DOI)](https://doi.org/10.1016/j.ijhydene.2023.03.073).
